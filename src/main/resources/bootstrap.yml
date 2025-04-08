@@ -1,0 +1,14 @@
+server:
+  port: 8080
+spring:
+  data:
+    mongodb:
+      uri: mongodb+srv://chatgpt:chatgpt@cluster1.km8zme5.mongodb.net/chatgpt?retryWrites=true
+  application:
+    name: retotecnico
+
+  banner:
+    location: classpath:banner/banner.txt
+  main:
+    allow-bean-definition-overriding: true
+
