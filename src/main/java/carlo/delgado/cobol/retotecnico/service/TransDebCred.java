@@ -1,4 +1,4 @@
 package carlo.delgado.cobol.retotecnico.service;
 
-public interface TransacionService {
+public interface TransDebCred {
 }
