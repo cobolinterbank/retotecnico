@@ -1,61 +1,67 @@
 package carlo.delgado.cobol.retotecnico.service.impl;
-import carlo.delgado.cobol.retotecnico.document.Transaccion;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import carlo.delgado.cobol.retotecnico.document.Transaccion;
+import carlo.delgado.cobol.retotecnico.repository.DebitoCreditoRepository;
+import carlo.delgado.cobol.retotecnico.service.TransDebCred;
+import com.opencsv.CSVReader;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+
+import reactor.core.publisher.Flux;
 
 import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 
 @Service
-public class TransacionServiceImpl {
+@RequiredArgsConstructor
+public class TransacionServiceImpl implements TransDebCred {
+    private final DebitoCreditoRepository repository;
 
-    @Autowired
-    private TransacionServiceImpl transactionRepository;
-
-    public void processCsv(String filePath) throws IOException {
-        try (CSVReader reader = new CSVReader(new FileReader(filePath))) {
-            List<Transaction> transactions = new ArrayList<>();
-            String[] nextLine;
-            while ((nextLine = reader.readNext()) != null) {
-                if (nextLine[0].equals("id")) continue; // Ignorar la cabecera
-
-                Transaction transaction = new Transaction();
-                transaction.setId(Integer.parseInt(nextLine[0]));
-                transaction.setTipo(nextLine[1]);
-                transaction.setMonto(Double.parseDouble(nextLine[2]));
-                transactions.add(transaction);
+    @Override
+    public Flux<Transaccion> procesarCSV(String path) {
+        return Flux.defer(() -> {
+            try (CSVReader reader = new CSVReader(new FileReader(path))) {
+                List<String[]> rows = reader.readAll();
+                return Flux.fromIterable(rows)
+                        .skip(1) // omitir cabecera
+                        .map(col -> Transaccion.builder()
+                                .id(Integer.parseInt(col[0]))
+                                .tipo(col[1])
+                                .monto(Double.parseDouble(col[2]))
+                                .build()
+                        )
+                        .flatMap(repository::save);
+            } catch (Exception e) {
+                return Flux.error(e);
             }
-            transactionRepository.saveAll(transactions).subscribe();
-        }
+        });
     }
 
-    public void generateReport() {
-        transactionRepository.findAll()
-                .collectList()
-                .doOnTerminate(() -> System.out.println("Reporte Finalizado"))
-                .doOnNext(transactions -> {
-                    double totalBalance = transactions.stream().mapToDouble(Transaction::getMonto).sum();
-                    Transaction highestTransaction = transactions.stream()
-                            .max((t1, t2) -> Double.compare(t1.getMonto(), t2.getMonto()))
-                            .orElse(null);
+    @Override
+    public void imprimirReporte(Flux<Transaccion> transacciones) {
+        transacciones.collectList().subscribe(lista -> {
+            double balance = lista.stream()
+                    .mapToDouble(tx -> tx.getTipo().equalsIgnoreCase("Crédito") ? tx.getMonto() : -tx.getMonto())
+                    .sum();
 
-                    long countCredito = transactions.stream().filter(t -> t.getTipo().equals("Crédito")).count();
-                    long countDebito = transactions.stream().filter(t -> t.getTipo().equals("Débito")).count();
+            Transaccion mayor = lista.stream()
+                    .max(Comparator.comparing(Transaccion::getMonto))
+                    .orElse(null);
 
-                    System.out.println("Reporte de Transacciones");
-                    System.out.println("---------------------------------------------");
-                    System.out.println("Balance Final: " + totalBalance);
-                    if (highestTransaction != null) {
-                        System.out.println("Transacción de Mayor Monto: ID " + highestTransaction.getId() + " - " + highestTransaction.getMonto());
-                    }
-                    System.out.println("Conteo de Transacciones: Crédito: " + countCredito + " Débito: " + countDebito);
-                })
-                .subscribe();
+            long creditos = lista.stream()
+                    .filter(tx -> tx.getTipo().equalsIgnoreCase("Crédito"))
+                    .count();
+
+            long debitos = lista.stream()
+                    .filter(tx -> tx.getTipo().equalsIgnoreCase("Débito"))
+                    .count();
+
+
+        });
     }
+
 
 }
