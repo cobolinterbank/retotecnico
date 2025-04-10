@@ -15,7 +15,7 @@ public class RetoTecnicoControler {
 
     @GetMapping("/procesar")
     public Mono<String> procesarArchivo() {
-        String path = "src/main/resources/transacciones.csv";
+        String path = "src/main/resources/data.csv";
         var transacciones = service.procesarCSV(path);
         service.imprimirReporte(transacciones);
         return Mono.just("Archivo procesado. Revisa la consola para el reporte.");

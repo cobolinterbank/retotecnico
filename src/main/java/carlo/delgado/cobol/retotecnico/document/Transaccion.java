@@ -1,7 +1,8 @@
 package carlo.delgado.cobol.retotecnico.document;
 
+
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -10,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(collection = "transaction")
+@Builder
 public class Transaccion {
 
 
@@ -17,4 +19,6 @@ public class Transaccion {
     private Integer id;
     private String tipo;
     private double monto;
+
+
 }
