@@ -59,6 +59,21 @@ public class TransacionServiceImpl implements TransDebCred {
                     .filter(tx -> tx.getTipo().equalsIgnoreCase("Débito"))
                     .count();
 
+            System.out.println("Reporte de Transacciones");
+            System.out.println("---------------------------------------------");
+            System.out.printf("Balance Final: %.2f%n", balance);
+            if (mayor != null) {
+                System.out.printf("Transacción de Mayor Monto: ID %d - %.2f%n", mayor.getId(), mayor.getMonto());
+            }
+            System.out.printf("Conteo de Transacciones: Crédito: %d Débito: %d%n", creditos, debitos);
+
+
+
+
+
+
+
+
 
         });
     }
