@@ -7,6 +7,7 @@ import com.opencsv.CSVReader;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import reactor.core.publisher.Flux;
 
@@ -14,7 +15,7 @@ import java.io.FileReader;
 import java.util.Comparator;
 import java.util.List;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TransacionServiceImpl implements TransDebCred {
@@ -35,6 +36,7 @@ public class TransacionServiceImpl implements TransDebCred {
                         )
                         .flatMap(repository::save);
             } catch (Exception e) {
+                log.error("Error al procesar el archivo CSV", e);
                 return Flux.error(e);
             }
         });
@@ -59,13 +61,13 @@ public class TransacionServiceImpl implements TransDebCred {
                     .filter(tx -> tx.getTipo().equalsIgnoreCase("Débito"))
                     .count();
 
-            System.out.println("Reporte de Transacciones");
-            System.out.println("---------------------------------------------");
-            System.out.printf("Balance Final: %.2f%n", balance);
+            log.info("Reporte de Transacciones");
+            log.info("---------------------------------------------");
+            log.info("Balance Final: {}", String.format("%.2f",balance));
             if (mayor != null) {
-                System.out.printf("Transacción de Mayor Monto: ID %d - %.2f%n", mayor.getId(), mayor.getMonto());
+                log.info("Transacción de Mayor Monto: ID {} - {}", mayor.getId(), String.format("%.2f", mayor.getMonto()));
             }
-            System.out.printf("Conteo de Transacciones: Crédito: %d Débito: %d%n", creditos, debitos);
+            log.info("Conteo de Transacciones: Crédito: {} Débito: {}", creditos, debitos);
 
 
 
