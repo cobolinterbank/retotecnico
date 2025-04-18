@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @RequestMapping("/reto")
 public class RetoTecnicoControler {
-
+    
     private final TransDebCred service;
 
     @GetMapping("/procesar")
